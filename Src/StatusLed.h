@@ -158,7 +158,7 @@ typedef void (*StatusLed_CallbackFn)(StatusLed* led);
  * @brief hold a single On-Off times
  */
 typedef union {
-    StatusLed_CycleTime         Times;
+    StatusLed_CycleTime         Times[2];
     struct {
         StatusLed_CycleTime     Off;
         StatusLed_CycleTime     On;

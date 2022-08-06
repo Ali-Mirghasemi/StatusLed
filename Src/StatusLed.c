@@ -15,9 +15,9 @@ static const StatusLed_Driver* ledDriver;
 #endif // STATUS_LED_MAX_NUM == -1
 
 #if STATUS_LED_ACTIVE_STATE
-    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Pin, ((LED)->State ^ (LED)->))
+    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Config, ((LED)->State ^ (LED)->ActiveState))
 #else
-    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Pin, (LED)->State)
+    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Config, (LED)->State)
 #endif
 
 /**
@@ -52,12 +52,22 @@ StatusLed_Timestamp StatusLed_handle(void) {
         if (pLed->Configured) {
     #endif
         
-        if (timestamp >= pLed->NextBlink) {
+        if (timestamp >= pLed->NextBlink && pLed->PatternIndex < pLed->Pattern->Len) {
             pLed->NextBlink = timestamp + pLed->Pattern->Cycles[pLed->PatternIndex].Times[pLed->State];
             pLed->State = !pLed->State;
             __ledWritePin(pLed);
-            if (pLed->State) {
-
+            if (!pLed->State) {
+                pLed->PatternIndex++;
+                if (pLed->PatternIndex >= pLed->Pattern->Len) {
+                #if STATUS_LED_CALLBACK
+                    if (pLed->onFinish) {
+                        pLed->onFinish(pLed);
+                    }
+                #endif
+                    if (pLed->Repeat) {
+                        pLed->PatternIndex = 0;
+                    }
+                }
             }
         }
 
@@ -67,6 +77,7 @@ StatusLed_Timestamp StatusLed_handle(void) {
     #if STATUS_LED_ENABLE_FLAG
         }
     #endif // STATUS_LED_ENABLE_FLAG
+        __next(pLed);
     }
 }
 /**
