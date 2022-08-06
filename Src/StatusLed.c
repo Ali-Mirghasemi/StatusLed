@@ -54,6 +54,11 @@ StatusLed_Timestamp StatusLed_handle(void) {
         
         if (timestamp >= pLed->NextBlink && pLed->PatternIndex < pLed->Pattern->Len) {
             pLed->NextBlink = timestamp + pLed->Pattern->Cycles[pLed->PatternIndex].Times[pLed->State];
+            // get next timestamp
+            if (nextTimestamp <= pLed->NextBlink) {
+                nextTimestamp = pLed->NextBlink;
+            }
+            // toggle led state
             pLed->State = !pLed->State;
             __ledWritePin(pLed);
             if (!pLed->State) {
@@ -79,6 +84,7 @@ StatusLed_Timestamp StatusLed_handle(void) {
     #endif // STATUS_LED_ENABLE_FLAG
         __next(pLed);
     }
+    return nextTimestamp - timestamp;
 }
 /**
  * @brief reset current pattern
