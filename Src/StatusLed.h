@@ -59,6 +59,10 @@ typedef uint16_t StatusLed_Pin;
  */
 #define STATUS_LED_ENABLE_FLAG              1 
 /**
+ * @brief set delay time (return of handle) when no led is available
+ */
+#define STATUS_LED_IDLE_TIME                100
+/**
  * @brief system timestamp in milliseconds
  */
 typedef uint32_t StatusLed_Timestamp;
@@ -164,6 +168,8 @@ typedef union {
         StatusLed_CycleTime     On;
     };
 } StatusLed_Cycle;
+
+#define STATUS_LED_LEN(ARR)           (sizeof(ARR) / sizeof(ARR[0]))
 /**
  * @brief hold a led pattern
  */
@@ -171,6 +177,7 @@ typedef struct {
     const StatusLed_Cycle*      Cycles;
     StatusLed_LenType           Len;
 } StatusLed_Pattern;
+#define STATUS_LED_PATTERN(CYCLES)    { (const StatusLed_Cycle*) (CYCLES), STATUS_LED_LEN(CYCLES)}
 /**
  * @brief hold minimum function for StatusLed lib to work
  * user must pass atleast init and write functions to status led library
@@ -209,7 +216,7 @@ typedef struct __StatusLed {
 } StatusLed;
 
 
-void StatusLed_init(StatusLed_Driver* driver);
+void StatusLed_init(const StatusLed_Driver* driver);
 StatusLed_Timestamp StatusLed_handle(void);
 
 void StatusLed_reset(StatusLed* led);
@@ -244,6 +251,11 @@ StatusLed*       StatusLed_find(const StatusLed_PinConfig* config);
 #if STATUS_LED_ARGS
     void StatusLed_setArgs(StatusLed* led, void* args);
     void* StatusLed_getArgs(StatusLed* led);
+#endif
+
+#if STATUS_LED_REPEAT
+    void StatusLed_setRepeat(StatusLed* led, StatusLed_RepeatMode repeat);
+    StatusLed_RepeatMode StatusLed_getRepeat(StatusLed* led);
 #endif
 
 #ifdef __cplusplus

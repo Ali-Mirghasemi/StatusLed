@@ -15,9 +15,9 @@ static const StatusLed_Driver* ledDriver;
 #endif // STATUS_LED_MAX_NUM == -1
 
 #if STATUS_LED_ACTIVE_STATE
-    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Config, ((LED)->State ^ (LED)->ActiveState))
+    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Config, (StatusLed_PinState) ((LED)->State ^ (LED)->ActiveState))
 #else
-    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Config, (LED)->State)
+    #define __ledWritePin(LED)      ledDriver->writePin((LED)->Config, (StatusLed_PinState) (LED)->State)
 #endif
 
 /**
@@ -25,7 +25,7 @@ static const StatusLed_Driver* ledDriver;
  * 
  * @param driver 
  */
-void StatusLed_init(StatusLed_Driver* driver) {
+void StatusLed_init(const StatusLed_Driver* driver) {
     ledDriver = driver;
 }
 /**
@@ -52,26 +52,33 @@ StatusLed_Timestamp StatusLed_handle(void) {
         if (pLed->Configured) {
     #endif
         
-        if (timestamp >= pLed->NextBlink && pLed->PatternIndex < pLed->Pattern->Len) {
+        if (timestamp >= pLed->NextBlink 
+        #if STATUS_LED_REPEAT
+            && pLed->PatternIndex < pLed->Pattern->Len
+        #endif
+        ) {
             pLed->NextBlink = timestamp + pLed->Pattern->Cycles[pLed->PatternIndex].Times[pLed->State];
             // get next timestamp
-            if (nextTimestamp <= pLed->NextBlink) {
+            if (nextTimestamp <= pLed->NextBlink && nextTimestamp != 0) {
                 nextTimestamp = pLed->NextBlink;
             }
             // toggle led state
             pLed->State = !pLed->State;
             __ledWritePin(pLed);
             if (!pLed->State) {
-                pLed->PatternIndex++;
-                if (pLed->PatternIndex >= pLed->Pattern->Len) {
+                if (++pLed->PatternIndex >= pLed->Pattern->Len) {
                 #if STATUS_LED_CALLBACK
                     if (pLed->onFinish) {
                         pLed->onFinish(pLed);
                     }
                 #endif
+                #if STATUS_LED_REPEAT
                     if (pLed->Repeat) {
-                        pLed->PatternIndex = 0;
+                #endif
+                    pLed->PatternIndex = 0;
+                #if STATUS_LED_REPEAT
                     }
+                #endif
                 }
             }
         }
@@ -84,7 +91,7 @@ StatusLed_Timestamp StatusLed_handle(void) {
     #endif // STATUS_LED_ENABLE_FLAG
         __next(pLed);
     }
-    return nextTimestamp - timestamp;
+    return nextTimestamp ? nextTimestamp - timestamp : STATUS_LED_IDLE_TIME;
 }
 /**
  * @brief reset current pattern
@@ -215,7 +222,7 @@ StatusLed_Status StatusLed_remove(StatusLed* remove) {
             remove->Previous = STATUS_LED_NULL;
             remove->Configured = 0;
             remove->Enabled = 0;
-            return 1;
+            return StatusLed_Status_Ok;
         }
         pLed = pLed->Previous;
     }
@@ -290,7 +297,7 @@ void StatusLed_setActiveState(StatusLed* led, StatusLed_ActiveState state) {
  * @return StatusLed_ActiveState 
  */
 StatusLed_ActiveState StatusLed_getActiveState(StatusLed* led) {
-    return led->ActiveState;
+    return (StatusLed_ActiveState) led->ActiveState;
 }
 #endif
 
@@ -332,5 +339,26 @@ void StatusLed_setArgs(StatusLed* led, void* args) {
  */
 void* StatusLed_getArgs(StatusLed* led) {
     return led->Args;
+}
+#endif
+
+#if STATUS_LED_REPEAT
+/**
+ * @brief set repeat mode
+ * 
+ * @param led 
+ * @param repeat 
+ */
+void StatusLed_setRepeat(StatusLed* led, StatusLed_RepeatMode repeat) {
+    led->Repeat = repeat;
+}
+/**
+ * @brief get repeat mode
+ * 
+ * @param led 
+ * @return StatusLed_RepeatMode 
+ */
+StatusLed_RepeatMode StatusLed_getRepeat(StatusLed* led) {
+    return led->Repeat;
 }
 #endif
