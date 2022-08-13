@@ -120,8 +120,8 @@ typedef enum {
  * remember if you have leds with different logic must enable STATUS_LED_ACTIVE_STATE
  */
 typedef enum {
-    StatusLed_ActiveState_Low     = 0,
-    StatusLed_ActiveState_High    = 1,
+    StatusLed_ActiveState_High    = 0,  
+    StatusLed_ActiveState_Low     = 1,
 } StatusLed_ActiveState;
 /**
  * @brief status led repeat mode
