@@ -169,7 +169,8 @@ typedef union {
     };
 } StatusLed_Cycle;
 
-#define STATUS_LED_LEN(ARR)           (sizeof(ARR) / sizeof(ARR[0]))
+#define STATUS_LED_CYCLE(ON, OFF)       { .On = (ON), .Off = (OFF) }
+#define STATUS_LED_LEN(ARR)             (sizeof(ARR) / sizeof(ARR[0]))
 /**
  * @brief hold a led pattern
  */
