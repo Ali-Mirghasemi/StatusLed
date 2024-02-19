@@ -31,9 +31,13 @@ extern "C" {
  */
 #define STATUS_LED_CALLBACK                 1
 /**
+ * @brief Enable initPin function in driver
+ */
+#define STATUS_LED_IO_INIT                 0
+/**
  * @brief enable deinit function in driver
  */
-#define STATUS_LED_DEINIT                   0
+#define STATUS_LED_IO_DEINIT               0
 /**
  * @brief enable StatusLed_IO in pin config 
  */
@@ -185,11 +189,13 @@ typedef struct {
  */
 typedef struct {
     StatusLed_GetTimestampFn    getTimestamp;
-    StatusLed_InitPinFn         initPin;
     StatusLed_WritePinFn        writePin;
-    #if STATUS_LED_DEINIT
-        StatusLed_DeInitPinFn   deinitPin;
-    #endif
+#if STATUS_LED_IO_INIT
+    StatusLed_InitPinFn         initPin;
+#endif
+#if STATUS_LED_DEINIT
+    StatusLed_DeInitPinFn       deinitPin;
+#endif
 } StatusLed_Driver;
 /**
  * @brief hold status led parameters

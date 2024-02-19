@@ -14,6 +14,18 @@ static const StatusLed_Driver* ledDriver;
     #define __next(LED)         LED++
 #endif // STATUS_LED_MAX_NUM == -1
 
+#if STATUS_LED_IO_INIT
+    #define __initPin(CONF)          if (ledDriver->initPin) { ledDriver->initPin(CONF); }
+#else
+    #define __initPin(CONF)
+#endif
+
+#if STATUS_LED_IO_DEINIT
+    #define __deinitPin(CONF)        if (ledDriver->deinitPin) { ledDriver->deinitPin(CONF); }
+#else
+    #define __deinitPin(CONF)
+#endif
+
 #if STATUS_LED_ACTIVE_STATE
     #define __ledWritePin(LED)      ledDriver->writePin((LED)->Config, (StatusLed_PinState) ((LED)->State ^ (LED)->ActiveState))
 #else
@@ -34,6 +46,10 @@ void StatusLed_init(const StatusLed_Driver* driver) {
  * @return StatusLed_Timestamp 
  */
 StatusLed_Timestamp StatusLed_handle(void) {
+    if (!ledDriver) {
+        return STATUS_LED_IDLE_TIME;
+    }
+
     StatusLed_Timestamp timestamp = ledDriver->getTimestamp();
     StatusLed* pLed = __leds();
     StatusLed_Timestamp nextTimestamp = 0;
@@ -175,7 +191,7 @@ StatusLed_Status StatusLed_add(StatusLed* led, const StatusLed_PinConfig* config
     led->NextBlink = 0;
     StatusLed_setConfig(led, config);
     // init IOs
-    ledDriver->initPin(config);
+    __initPin(config);
 #if STATUS_LED_MAX_NUM == -1
     // add key to linked list
     led->Previous = lastLed;
@@ -197,11 +213,7 @@ StatusLed_Status StatusLed_remove(StatusLed* remove) {
     // check last key first
     if (remove == pLed) {
         // deinit IO
-    #if KEY_USE_DEINIT
-        if (keyDriver->deinitPin) {
-            keyDriver->deinitPin(remove->Config);
-        }
-    #endif
+        __deinitPin(remove->Config);
         // remove key dropped from link list
         pLed->Previous = remove->Previous;
         remove->Previous = STATUS_LED_NULL;
@@ -212,11 +224,7 @@ StatusLed_Status StatusLed_remove(StatusLed* remove) {
     while (STATUS_LED_NULL != pLed) {
         if (remove == pLed->Previous) {
             // deinit IO
-		#if KEY_USE_DEINIT
-            if (ledDriver->deinitPin) {
-                ledDriver->deinitPin(remove->Config);
-            }
-        #endif
+            __deinitPin(remove->Config);
             // remove key dropped from link list
             pLed->Previous = remove->Previous;
             remove->Previous = STATUS_LED_NULL;
