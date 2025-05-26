@@ -18,6 +18,10 @@ extern "C" {
 
 #include <stdint.h>
 
+#define STATUS_LED_VER_MAJOR    0
+#define STATUS_LED_VER_MINOR    1
+#define STATUS_LED_VER_FIX      0
+
 /******************************************************************************/
 /*                                Configuration                               */
 /******************************************************************************/
@@ -33,11 +37,11 @@ extern "C" {
 /**
  * @brief Enable initPin function in driver
  */
-#define STATUS_LED_IO_INIT                 0
+#define STATUS_LED_IO_INIT                  0
 /**
  * @brief enable deinit function in driver
  */
-#define STATUS_LED_IO_DEINIT               0
+#define STATUS_LED_IO_DEINIT                0
 /**
  * @brief enable StatusLed_IO in pin config 
  */
@@ -80,6 +84,17 @@ typedef uint16_t StatusLed_CycleTime;
 typedef uint8_t StatusLed_LenType;
 
 /******************************************************************************/
+
+#define __STATUS_LED_VER_STR(major, minor, fix)     #major "." #minor "." #fix
+#define _STATUS_LED_VER_STR(major, minor, fix)      __STATUS_LED_VER_STR(major, minor, fix)
+/**
+ * @brief show stream version in string format
+ */
+#define STATUS_LED_VER_STR                          _STATUS_LED_VER_STR(STATUS_LED_VER_MAJOR, STATUS_LED_VER_MINOR, STATUS_LED_VER_FIX)
+/**
+ * @brief show stream version in integer format, ex: 0.2.0 -> 200
+ */
+#define STATUS_LED_VER                              ((STATUS_LED_VER_MAJOR * 10000UL) + (STATUS_LED_VER_MINOR * 100UL) + (STATUS_LED_VER_FIX))
 
 #define STATUS_LED_NULL                     ((StatusLed*) 0)
 #define STATUS_LED_PATTERN_NULL             ((StatusLed_Pattern*) 0)
